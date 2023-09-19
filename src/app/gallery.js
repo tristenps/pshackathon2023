@@ -5,8 +5,10 @@ import Product from './product';
 
 export default function Gallery(props) {
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
+    <Box sx={{
+      //flexGrow: 1,
+    }}>
+      <Grid container rowSpacing={4} columnSpacing={0}>
         {props.products && props.products.length > 1 ?
           props.products.map( prod=> (
             <Grid xs={3}>
@@ -16,6 +18,8 @@ export default function Gallery(props) {
                 img={prod.img}
                 price={'$' + prod.price}
                 description={prod.description}
+                isLoading={prod.isLoading || false}
+                key={prod.key}
               />
             </Grid>
           ))

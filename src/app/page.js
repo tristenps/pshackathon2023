@@ -1,79 +1,117 @@
 'use client';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
-import CircularProgress from '@mui/material/CircularProgress';
-import {Search} from '@mui/icons-material';
 
 import {useState} from 'react';
 
 import Image from 'next/image'
 import Gallery from './gallery';
+import ChatBox from './chat';
+import { Stack, Typography } from '@mui/material';
 
-function Form() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [prompt, setPrompt] = useState('');
-  const [products, setProducts] = useState([]);
 
-  function handleText(e) {
-    setPrompt(e.target.value);
+const EmptyProducts = [
+  {key: 1, isLoading: true},
+  {key: 2, isLoading: true},
+  {key: 3, isLoading: true},
+  {key: 4, isLoading: true},
+]
+
+function Chat() {
+  const [msg, setMsg] = useState('');
+  const [messages, setMessages]= useState([]);
+  const [products, setProducts]= useState([]);
+  const [isLoading, setIsLoading]= useState(false);
+
+  function addMessage(message) {
+    setMessages(prevState => {
+      return [...prevState, message]
+    });
   }
 
-  function handleSubmit(e) {
-    if (prompt !== ''){
+  function handleMsg(e) {
+    setMsg(e.target.value)
+  }
+
+  function handleKeypress(e) {
+    if (e.charCode == 13) {
       setIsLoading(true);
-      setProducts([]);
       fetch('http://localhost:8000/products', {
         method: 'POST',
-        body: JSON.stringify({prompt}),
+        body: JSON.stringify({prompt:msg}),
         headers: {
           Accept: "application/json, text/plain, */*",
           "Content-Type": "application/json"
         }
       }).then((response)=> response.json())
         .then((data)=> {
-          //console.log(data);
+          setMessages(prevState=> {
+            return [...prevState.filter((msg)=>!msg.isLoading)]
+          })
+          addMessage({
+            message: 'Take a look at what I found!',
+            isLoading: false,
+            type: 'system',
+            key: messages.length+1,
+          });
+          console.log(data);
           setProducts(data);
           setIsLoading(false);
         })
+      setMsg('');
+      addMessage({
+        message: msg,
+        isLoading: false,
+        type: 'user',
+        key: messages.length+1,
+      });
+      setProducts(EmptyProducts);
+      addMessage({
+        message: 'Okay! Let me look and see what I can find...',
+        isLoading: false,
+        type: 'system',
+        key: messages.length+1,
+      });
+      addMessage({
+        isLoading: true,
+        type: 'system',
+        key: messages.length+1,
+      });
     }
   }
 
-  return (
-    <Box component="form" noValidate autoComplete='off'>
-      <Grid container spacing={2}>
-        <Grid xs={11}>
+  return(
+    <Grid container spacing={1}>
+      <Grid xs={4}>
+        <Stack>
+          <div className='h-128 overflow-auto'>
+            <ChatBox messages={messages}/>
+          </div>
           <TextField
             sx={{textarea: {color: 'white'}}}
             id="outlined-basic"
-            label="Event Description"
+            label=""
             variant="outlined"
             focused
             fullWidth
             multiline
-            minRows={1}
-            value={prompt}
-            onChange={handleText}
-         >
-         </TextField>
-        </Grid>
-        <Grid xs={1}>
-          {isLoading ? <CircularProgress size="3.5rem"/> : 
-            <Button variant="text" color="info"
+            maxRows={1}
+            value={msg}
+            onChange={handleMsg}
+            onKeyPress={handleKeypress}
             disabled={isLoading}
-            onClick={handleSubmit}
-            >
-            <Search fontSize='large'/>
-            </Button>
-          }
-        </Grid>
+          >
+          </TextField>
+        </Stack>
       </Grid>
-      <Grid xs={12} className="align-center">
-        {<Gallery products={products}/>}
+      <Grid xs={1}></Grid>
+      <Grid xs={7}>
+        <div className='h-140 overflow-auto'>
+          <Gallery products={products}/>
+        </div>
       </Grid>
-    </Box>
-  );
+    </Grid>
+  )
 }
 
 export default function Home() {
@@ -98,12 +136,9 @@ export default function Home() {
           </a>
         </div>
       </div>
-      <div className='z-1 max-w-4xl w-full items-center font-mono'>
-        <Form/>
+      <div className='max-w-8xl w-full items-center font-mono'>
+        <Chat/>
       </div>
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-      </div>
-
     </main>
   )
 }

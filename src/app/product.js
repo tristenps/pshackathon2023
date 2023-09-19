@@ -2,16 +2,19 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
-import {CardActionArea} from '@mui/material';
+import {CardActionArea, Skeleton} from '@mui/material';
 
 export default function Product(props) {
   return (
-    <Card sx={{maxWidth: 220}}>
+    <div>
+    {props.isLoading ?
+      <Skeleton sx={{margin: '1rem', bgcolor: '#181818'}} height={500} animation='wave'/> : 
+    <Card sx={{maxWidth: 220 }}>
       <CardActionArea>
         <CardMedia
           component="img"
           height= "100"
-          image={props.img || "https://i.imgur.com/MK3eW3Am.jpg"}
+          image={props.img}
           alt="Product Image"
         />
         <CardContent>
@@ -29,5 +32,7 @@ export default function Product(props) {
         </CardContent>
       </CardActionArea>
     </Card>
+    }
+    </div>
   )
 }
