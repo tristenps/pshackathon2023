@@ -16,7 +16,7 @@ export default function ChatBox(props){
 
   if (props.messages.length<1) {
     props.messages.push({
-      key: 1,
+      key: 0,
       message: 'Hi there, let me know what type of event, situation or products you are looking to find!',
       isLoading: false,
       type: 'system',
@@ -63,8 +63,8 @@ function Message(props){
       { props.isLoading ?
         <Skeleton sx={{bgcolor: '#181818'}}variant="rounded" height={30}/> :
         props.type == 'user' ? 
-        <UserPaper elevation={6} variant="elevation" >{props.message || 'Hello world'}</UserPaper> :
-        <MessagePaper elevation={6} variant="elevation" >{props.message || 'Hello world'}</MessagePaper>
+        <UserPaper elevation={6} variant="elevation" >{props.message}</UserPaper> :
+        <MessagePaper elevation={6} variant="elevation" >{props.message}</MessagePaper>
       }
     </Box>
   )

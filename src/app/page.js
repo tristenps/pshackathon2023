@@ -2,12 +2,13 @@
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 
 import Image from 'next/image'
 import Gallery from './gallery';
 import ChatBox from './chat';
-import { Stack, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
+import { Refresh } from '@mui/icons-material';
 
 
 const EmptyProducts = [
@@ -17,15 +18,65 @@ const EmptyProducts = [
   {key: 4, isLoading: true},
 ]
 
+const WaitingMessages = [
+  'Oh, maybe this one...',
+  'No, this one won\'t do...',
+  'I\'m crunching the numbers, just a moment...',
+  'My virtual hamster is running on its wheel to pwoer up my answer generator...',
+  'I\'m decoding the secrets of the Promo-verse. Give me a second here...',
+  'I\'m consulting the virtual magic eight ball for your answer. Outlook hazy, trying again...',
+  'I\'m brewing a potion of wisdom, but the cauldron\'s on low heat...',
+  'Hold on, I\'m flipping through my digital Rolodex of witty responses.',
+]
+
+function randomMessage() {
+  return WaitingMessages[Math.floor(Math.random()*WaitingMessages.length)];
+}
+
 function Chat() {
   const [msg, setMsg] = useState('');
   const [messages, setMessages]= useState([]);
   const [products, setProducts]= useState([]);
   const [isLoading, setIsLoading]= useState(false);
+  const [intId, setIntervalId] = useState({});
+  const [conversation, setConversation] = useState([]);
+
+  useEffect(()=> {
+    function waitingMessages(){
+      setMessages(prevState=> {
+        return [...prevState.filter((msg)=>!msg.isLoading)]
+      })
+      addMessage({
+        message: randomMessage(),
+        isLoading: false,
+        type: 'system',
+      });
+      addMessage({
+        isLoading: true,
+        type: 'system',
+      });
+    }
+    if (isLoading){
+      const intervalId = setInterval(waitingMessages, 2500);
+      setIntervalId(({intervalId}));
+    }
+    if (!isLoading) {
+      clearInterval(intId.intervalId);
+    }
+  }, [isLoading]);
+
+  function addToConversation(question) {
+    setConversation(prevState => {
+      return [...prevState, question]
+    })
+  }
 
   function addMessage(message) {
     setMessages(prevState => {
-      return [...prevState, message]
+      return [...prevState, {
+        ...message,
+        key: prevState.length,
+      }]
     });
   }
 
@@ -33,75 +84,192 @@ function Chat() {
     setMsg(e.target.value)
   }
 
+  function handleReset() {
+    setMsg('');
+    setMessages([]);
+    addMessage({
+      message: 'Alright, let\'s try something new!',
+      isLoading: false,
+      type: 'system',
+    });
+    setConversation([]);
+    setProducts([]);
+  }
+
   function handleKeypress(e) {
     if (e.charCode == 13) {
-      setIsLoading(true);
-      fetch('http://localhost:8000/products', {
-        method: 'POST',
-        body: JSON.stringify({prompt:msg}),
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json"
-        }
-      }).then((response)=> response.json())
-        .then((data)=> {
-          setMessages(prevState=> {
-            return [...prevState.filter((msg)=>!msg.isLoading)]
+      // New Conversation
+      if (conversation.length == 0) {
+        setProducts(EmptyProducts);
+        setMsg('');
+        addMessage({
+          message: msg,
+          isLoading: false,
+          type: 'user',
+        });
+        addMessage({
+          message: 'Okay! Let me look and see what I can find...',
+          isLoading: false,
+          type: 'system',
+        });
+        addMessage({
+          isLoading: true,
+          type: 'system',
+        });
+        setIsLoading(true);
+        fetch('https://pshackathon23.azurewebsites.net/api/Product/EventPost?' + new URLSearchParams({
+          eventDescription: msg,
+        }), {
+          method: 'POST',
+          //body: JSON.stringify({prompt:msg}),
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json"
+          }
+        }).then((response)=> response.json())
+          .then((data)=> {
+            setMessages(prevState=> {
+              return [...prevState.filter((msg)=>!msg.isLoading)]
+            })
+            addMessage({
+              message: 'Take a look at what I found!',
+              isLoading: false,
+              type: 'system',
+            });
+            console.log(data);
+            let key = 0;
+            const cleanData = data.products.map((prod)=> {
+              return {
+                key: key++,
+                name: prod.name,
+                supplier: prod.supplier,
+                //img: prod.imageUrl,
+                img: 'https://picsum.photos/200/',
+                price: prod.price,
+                description: prod.description,
+                eventDesc: prod.eventSpecificDescription,
+              }
+            })
+            console.log(cleanData);
+            addToConversation({
+              isQuestion: true,
+              text: data.question
+            });
+            addToConversation({
+              isQuestion: false,
+              text: data.answer,
+            });
+            setProducts(cleanData);
+            setIsLoading(false);
           })
-          addMessage({
-            message: 'Take a look at what I found!',
-            isLoading: false,
-            type: 'system',
-            key: messages.length+1,
-          });
-          console.log(data);
-          setProducts(data);
-          setIsLoading(false);
-        })
-      setMsg('');
-      addMessage({
-        message: msg,
-        isLoading: false,
-        type: 'user',
-        key: messages.length+1,
-      });
-      setProducts(EmptyProducts);
-      addMessage({
-        message: 'Okay! Let me look and see what I can find...',
-        isLoading: false,
-        type: 'system',
-        key: messages.length+1,
-      });
-      addMessage({
-        isLoading: true,
-        type: 'system',
-        key: messages.length+1,
-      });
-    }
+      } else {
+        // Continue Conversation
+        setProducts(EmptyProducts);
+        setMsg('');
+        addMessage({
+          message: msg,
+          isLoading: false,
+          type: 'user',
+        });
+        addMessage({
+          message: 'Got it! Let me look into that...',
+          isLoading: false,
+          type: 'system',
+        });
+        addMessage({
+          isLoading: true,
+          type: 'system',
+        });
+        setIsLoading(true);
+        fetch('https://pshackathon23.azurewebsites.net/api/Product/RefinedPost', {
+          method: 'POST',
+          body: JSON.stringify({
+            refiningQuestion: msg,
+            chatLog: conversation,
+          }),
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json"
+          }
+        }).then((response)=> response.json())
+          .then((data)=> {
+            setMessages(prevState=> {
+              return [...prevState.filter((msg)=>!msg.isLoading)]
+            })
+            console.log(data);
+            if (data.products && data.products.length > 0) {
+              addMessage({
+                message: 'Take a look at what I found!',
+                isLoading: false,
+                type: 'system',
+              });
+              let key = 0;
+              const cleanData = data.products.map((prod)=> {
+                return {
+                  key: key++,
+                  name: prod.name,
+                  supplier: prod.supplier,
+                  //img: prod.imageUrl,
+                  img: 'https://picsum.photos/200/',
+                  price: prod.price,
+                  description: prod.description,
+                  eventDesc: prod.eventSpecificDescription,
+                }
+              })
+              console.log(cleanData);
+              setConversation(data.chatLog);
+              setProducts(cleanData);
+              setIsLoading(false);
+            } else {
+              addMessage({
+                message: 'Hmm, I couldn\'t find anything that matched what you were asking, could you try again?',
+                type: 'system',
+                isLoading: false,
+              })
+              setIsLoading(false);
+              setProducts([]);
+            }
+          })
+      }
+    }   
   }
 
   return(
-    <Grid container spacing={1}>
+    <Grid container spacing={0} disableEqualOverflow sx={{alignItems: 'center'}}>
       <Grid xs={4}>
         <Stack>
           <div className='h-128 overflow-auto'>
             <ChatBox messages={messages}/>
           </div>
-          <TextField
-            sx={{textarea: {color: 'white'}}}
-            id="outlined-basic"
-            label=""
-            variant="outlined"
-            focused
-            fullWidth
-            multiline
-            maxRows={1}
-            value={msg}
-            onChange={handleMsg}
-            onKeyPress={handleKeypress}
-            disabled={isLoading}
-          >
-          </TextField>
+          <Grid container spacing={1} sx={{alignItems: 'center'}}>
+            <Grid xs>
+              <TextField
+                sx={{textarea: {color: 'white'}}}
+                id="outlined-basic"
+                label=""
+                variant="outlined"
+                focused
+                fullWidth
+                multiline
+                maxRows={1}
+                value={msg}
+                onChange={handleMsg}
+                onKeyPress={handleKeypress}
+                disabled={isLoading}
+              >
+              </TextField>
+            </Grid>
+            {isLoading || conversation.length < 1 ? '':
+              <Grid xs={1} classes="align-middle">
+                <Button
+                  variant="text"
+                  onClick={handleReset}
+                >
+                  <Refresh sx={{alignSelf: 'center', fontSize: 30}}/>
+                </Button>
+              </Grid>
+            }
+          </Grid>
         </Stack>
       </Grid>
       <Grid xs={1}></Grid>

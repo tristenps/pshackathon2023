@@ -11,7 +11,7 @@ export default function Gallery(props) {
       <Grid container rowSpacing={4} columnSpacing={0}>
         {props.products && props.products.length > 1 ?
           props.products.map( prod=> (
-            <Grid xs={3}>
+            <Grid xs={3} key={prod.key}>
               <Product
                 name={prod.name}
                 supplier={prod.supplier}
