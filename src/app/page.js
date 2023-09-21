@@ -7,7 +7,7 @@ import {useEffect, useState} from 'react';
 import Image from 'next/image'
 import Gallery from './gallery';
 import ChatBox from './chat';
-import { Button, Stack, Typography } from '@mui/material';
+import { Button, Stack } from '@mui/material';
 import { Refresh } from '@mui/icons-material';
 
 
@@ -22,15 +22,20 @@ const WaitingMessages = [
   'Oh, maybe this one...',
   'No, this one won\'t do...',
   'I\'m crunching the numbers, just a moment...',
-  'My virtual hamster is running on its wheel to pwoer up my answer generator...',
+  'My virtual hamster is running on its wheel to power up my answer generator...',
   'I\'m decoding the secrets of the Promo-verse. Give me a second here...',
   'I\'m consulting the virtual magic eight ball for your answer. Outlook hazy, trying again...',
   'I\'m brewing a potion of wisdom, but the cauldron\'s on low heat...',
-  'Hold on, I\'m flipping through my digital Rolodex of witty responses.',
+  'Hold on, I\'m flipping through my digital Rolodex of witty responses...',
+  'My brain cells are doing the electric slide to come up with your answer...',
+  'I\'m juggling ones and zeros, trying to create a pixel-perfect answer...',
+  'I\'m cooking up a batch of answers, and it\'s simmering at a leisurely pace...',
+  'I\'m giving your question the brainpower it deserves...',
+  'I\'m in thinking mode right now, stand by...',
 ]
 
 function randomMessage() {
-  return WaitingMessages[Math.floor(Math.random()*WaitingMessages.length)];
+  return WaitingMessages[Math.floor(Math.random()*(WaitingMessages.length-1))];
 }
 
 function Chat() {
@@ -121,7 +126,6 @@ function Chat() {
           eventDescription: msg,
         }), {
           method: 'POST',
-          //body: JSON.stringify({prompt:msg}),
           headers: {
             Accept: "application/json, text/plain, */*",
             "Content-Type": "application/json"
@@ -131,36 +135,46 @@ function Chat() {
             setMessages(prevState=> {
               return [...prevState.filter((msg)=>!msg.isLoading)]
             })
-            addMessage({
-              message: 'Take a look at what I found!',
-              isLoading: false,
-              type: 'system',
-            });
-            console.log(data);
-            let key = 0;
-            const cleanData = data.products.map((prod)=> {
-              return {
-                key: key++,
-                name: prod.name,
-                supplier: prod.supplier,
-                //img: prod.imageUrl,
-                img: 'https://picsum.photos/200/',
-                price: prod.price,
-                description: prod.description,
-                eventDesc: prod.eventSpecificDescription,
-              }
-            })
-            console.log(cleanData);
-            addToConversation({
-              isQuestion: true,
-              text: data.question
-            });
-            addToConversation({
-              isQuestion: false,
-              text: data.answer,
-            });
-            setProducts(cleanData);
-            setIsLoading(false);
+            if (data.products && data.products.length > 0) {
+              addMessage({
+                message: 'Take a look at what I found!',
+                isLoading: false,
+                type: 'system',
+              });
+              //console.log(data);
+              let key = 0;
+              const cleanData = data.products.map((prod)=> {
+                return {
+                  key: key++,
+                  name: prod.name,
+                  supplier: prod.vendor,
+                  img: prod.imageUrl,
+                  //img: 'https://picsum.photos/200/',
+                  price: prod.price,
+                  description: prod.description,
+                  eventDesc: prod.eventSpecificDescription,
+                }
+              })
+              //console.log(cleanData);
+              addToConversation({
+                isQuestion: true,
+                text: data.question
+              });
+              addToConversation({
+                isQuestion: false,
+                text: data.answer,
+              });
+              setProducts(cleanData);
+              setIsLoading(false);
+            } else {
+              addMessage({
+                message: 'Hmm, I couldn\'t find anything that matched what you were asking, could you try again?',
+                type: 'system',
+                isLoading: false,
+              })
+              setIsLoading(false);
+              setProducts([]);
+            }
           })
       } else {
         // Continue Conversation
@@ -196,7 +210,7 @@ function Chat() {
             setMessages(prevState=> {
               return [...prevState.filter((msg)=>!msg.isLoading)]
             })
-            console.log(data);
+            //console.log(data);
             if (data.products && data.products.length > 0) {
               addMessage({
                 message: 'Take a look at what I found!',
@@ -208,15 +222,15 @@ function Chat() {
                 return {
                   key: key++,
                   name: prod.name,
-                  supplier: prod.supplier,
-                  //img: prod.imageUrl,
-                  img: 'https://picsum.photos/200/',
+                  supplier: prod.vendor,
+                  img: prod.imageUrl,
+                  //img: 'https://picsum.photos/200/',
                   price: prod.price,
                   description: prod.description,
                   eventDesc: prod.eventSpecificDescription,
                 }
               })
-              console.log(cleanData);
+              //console.log(cleanData);
               setConversation(data.chatLog);
               setProducts(cleanData);
               setIsLoading(false);
@@ -249,6 +263,7 @@ function Chat() {
                 label=""
                 variant="outlined"
                 focused
+                autoFocus
                 fullWidth
                 multiline
                 maxRows={1}
@@ -298,7 +313,7 @@ export default function Home() {
               alt="PromoPaladins Logo"
               className=""
               width={100}
-              height={24}
+              height={100}
               priority
             />
           </a>

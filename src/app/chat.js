@@ -1,4 +1,5 @@
 import { Box, Paper, Skeleton, Stack } from "@mui/material";
+import Grid from '@mui/material/Unstable_Grid2';
 import {styled} from '@mui/material/styles';
 import { useEffect, useRef } from 'react';
 
@@ -41,7 +42,7 @@ const MessagePaper = styled(Paper)(({ theme })=>({
   border: '1px solid #333',
   color: 'white',
   padding: theme.spacing(2),
-  ...theme.typography.body2,
+  ...theme.typography.body1,
   textAlign: 'left',
 }))
 
@@ -50,7 +51,7 @@ const UserPaper = styled(Paper)(({ theme })=>({
   border: '1px solid #111',
   color: 'white',
   padding: theme.spacing(2),
-  ...theme.typography.body2,
+  ...theme.typography.body1,
   textAlign: 'left',
 }))
 
@@ -61,10 +62,32 @@ function Message(props){
       p: 1,
     }}>
       { props.isLoading ?
-        <Skeleton sx={{bgcolor: '#181818'}}variant="rounded" height={30}/> :
+        <Grid container>
+          <Grid xs>
+            <Skeleton sx={{bgcolor: '#181818'}}variant="rounded" height={30}/>
+          </Grid>
+          <Grid xs={2}>
+          </Grid>
+        </Grid>
+        :
         props.type == 'user' ? 
-        <UserPaper elevation={6} variant="elevation" >{props.message}</UserPaper> :
-        <MessagePaper elevation={6} variant="elevation" >{props.message}</MessagePaper>
+        <Grid container>
+          <Grid xs={2}>
+          </Grid>
+          <Grid xs>
+            <UserPaper elevation={6} variant="elevation" >
+              {props.message}
+            </UserPaper>
+          </Grid>
+        </Grid>
+         :
+        <Grid container>
+          <Grid xs>
+            <MessagePaper elevation={6} variant="elevation" >{props.message}</MessagePaper>
+          </Grid>
+          <Grid xs={2}>
+          </Grid>
+        </Grid>
       }
     </Box>
   )

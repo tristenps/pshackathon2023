@@ -6,10 +6,9 @@ import Product from './product';
 export default function Gallery(props) {
   return (
     <Box sx={{
-      //flexGrow: 1,
     }}>
       <Grid container rowSpacing={4} columnSpacing={0}>
-        {props.products && props.products.length > 1 ?
+        {props.products && props.products.length > 0 ?
           props.products.map( prod=> (
             <Grid xs={3} key={prod.key}>
               <Product
@@ -19,6 +18,7 @@ export default function Gallery(props) {
                 price={'$' + prod.price}
                 description={prod.description}
                 isLoading={prod.isLoading || false}
+                eventDesc={prod.eventDesc}
                 key={prod.key}
               />
             </Grid>
