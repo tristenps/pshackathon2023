@@ -36,9 +36,6 @@ export default function Product(props) {
               {' '}
               {props.price || '$3.89'}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {props.description || 'Amazing'}
-            </Typography>
           </CardContent>
         </CardActionArea>
         <Dialog open={isOpen} onClose={handleClose}>
