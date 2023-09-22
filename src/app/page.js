@@ -32,6 +32,14 @@ const WaitingMessages = [
   'I\'m cooking up a batch of answers, and it\'s simmering at a leisurely pace...',
   'I\'m giving your question the brainpower it deserves...',
   'I\'m in thinking mode right now, stand by...',
+  'Hmm, let me mull that over for a moment...',
+  'Thinking....',
+  'Almost there...',
+  'Just another few moments...',
+  'Sit tight, almost done...',
+  'I\'m in the middle of some deep thinking...',
+  'Thank you for your patience...',
+  'Bear with me just a few more seconds...',
 ]
 
 function randomMessage() {
@@ -62,7 +70,7 @@ function Chat() {
       });
     }
     if (isLoading){
-      const intervalId = setInterval(waitingMessages, 2500);
+      const intervalId = setInterval(waitingMessages, 3500);
       setIntervalId(({intervalId}));
     }
     if (!isLoading) {
